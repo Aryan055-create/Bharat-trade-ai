@@ -5,14 +5,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -22,18 +22,67 @@ jobs:
         with:
           gradle-version: '8.10'
 
-      - name: Extract Android project
+      - name: Create Android project structure
         run: |
-          mkdir buildsrc
-          unzip -q bharat_trade_android_build_ready.zip -d buildsrc
+          mkdir -p app/src/main/java/com/bharattrade
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+
+          # Move Android source files
+          mv MainActivity.java app/src/main/java/com/bharattrade/MainActivity.java
+          mv AndroidManifest.xml app/src/main/AndroidManifest.xml
+          mv activity_main.xml app/src/main/res/layout/activity_main.xml
+          mv styles.xml app/src/main/res/values/styles.xml
+
+          # Detect the application Gradle file
+          if grep -q "com.android.application" "build.gradle"; then
+            mv "build.gradle" app/build.gradle
+          elif [ -f "build (1).gradle" ]; then
+            mv "build (1).gradle" app/build.gradle
+          fi
+
+          # Create root build file if needed
+          if [ ! -f build.gradle ]; then
+            cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+          fi
+
+          # Make sure settings.gradle exists
+          if [ ! -f settings.gradle ]; then
+            cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "BharatTrade"
+          include(":app")
+          EOF
+          fi
+
+          echo "===== PROJECT STRUCTURE ====="
+          find . -maxdepth 5 -type f | sort
 
       - name: Build APK
         run: |
-          cd buildsrc
           gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Bharat-Trade-AI-APK
-          path: buildsrc/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
