@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -22,19 +22,20 @@ jobs:
         with:
           gradle-version: '8.10'
 
-      - name: Extract project
+      - name: Extract Android project
         run: |
+          mkdir buildsrc
           unzip -q bharat_trade_android_build_ready.zip -d buildsrc
-          cd buildsrc/bharat_trade_android_build_ready
-          echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
+          echo "Contents:"
+          ls -la buildsrc
 
       - name: Build APK
         run: |
-          cd "$PROJECT_DIR"
+          cd buildsrc
           gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Bharat-Trade-AI-APK
-          path: "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk"
+          path: buildsrc/app/build/outputs/apk/debug/app-debug.apk
