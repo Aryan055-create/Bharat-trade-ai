@@ -1,0 +1,10 @@
+You said you do not have Android Studio.
+
+This project is ready to build, but an APK compilation requires an Android SDK + Java/Gradle build environment. I cannot package those large toolchains inside this chat attachment.
+
+Simplest options:
+1. Install Android Studio on a Windows/Mac/Linux computer and open this folder, then Build > Generate App Bundle/APKs > Generate APKs.
+2. Use a cloud Android build service/CI such as GitHub Actions with an Android SDK runner.
+3. If you want, upload the built APK here later and I can inspect/review it.
+
+The app remains PAPER MODE and contains no real-money order execution.
