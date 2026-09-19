@@ -22,37 +22,20 @@ jobs:
         with:
           gradle-version: '8.10'
 
-      - name: Create Android project structure
+      - name: Prepare Android project
         run: |
+          echo "Preparing Android project..."
+
           mkdir -p app/src/main/java/com/bharattrade
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
 
-          # Move Android source files
-          mv MainActivity.java app/src/main/java/com/bharattrade/MainActivity.java
-          mv AndroidManifest.xml app/src/main/AndroidManifest.xml
-          mv activity_main.xml app/src/main/res/layout/activity_main.xml
-          mv styles.xml app/src/main/res/values/styles.xml
+          cp MainActivity.java app/src/main/java/com/bharattrade/MainActivity.java
+          cp AndroidManifest.xml app/src/main/AndroidManifest.xml
+          cp activity_main.xml app/src/main/res/layout/activity_main.xml
+          cp styles.xml app/src/main/res/values/styles.xml
 
-          # Detect the application Gradle file
-          if grep -q "com.android.application" "build.gradle"; then
-            mv "build.gradle" app/build.gradle
-          elif [ -f "build (1).gradle" ]; then
-            mv "build (1).gradle" app/build.gradle
-          fi
-
-          # Create root build file if needed
-          if [ ! -f build.gradle ]; then
-            cat > build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application' version '8.7.3' apply false
-          }
-          EOF
-          fi
-
-          # Make sure settings.gradle exists
-          if [ ! -f settings.gradle ]; then
-            cat > settings.gradle <<'EOF'
+          cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -72,10 +55,34 @@ jobs:
           rootProject.name = "BharatTrade"
           include(":app")
           EOF
-          fi
 
-          echo "===== PROJECT STRUCTURE ====="
-          find . -maxdepth 5 -type f | sort
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.bharattrade'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.bharattrade'
+                  minSdk 26
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          EOF
+
+          echo "Project prepared:"
+          find app -type f
 
       - name: Build APK
         run: |
