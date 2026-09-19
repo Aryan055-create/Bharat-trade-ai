@@ -1,0 +1,39 @@
+name: Build Bharat Trade APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+
+      - name: Extract Android project
+        run: |
+          mkdir buildsrc
+          unzip -q bharat_trade_android_build_ready.zip -d buildsrc
+
+      - name: Build APK
+        run: |
+          cd buildsrc
+          gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bharat-Trade-AI-APK
+          path: buildsrc/app/build/outputs/apk/debug/app-debug.apk
